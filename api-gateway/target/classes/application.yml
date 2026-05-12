@@ -4,8 +4,9 @@ server:
 spring:
   application:
     name: api-gateway
-
   cloud:
+    compatibility-verifier:
+      enabled: false
     gateway:
       discovery:
         locator:
@@ -16,12 +17,10 @@ spring:
           uri: lb://produits-service
           predicates:
             - Path=/api/produits/**
-
         - id: categories-route
           uri: lb://produits-service
           predicates:
             - Path=/api/categories/**
-
         - id: avis-route
           uri: lb://avis-service
           predicates:
@@ -30,6 +29,6 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://${EUREKA_HOST:localhost}:8761/eureka/
+      defaultZone: http://eureka-server:8761/eureka/
   instance:
     prefer-ip-address: true
