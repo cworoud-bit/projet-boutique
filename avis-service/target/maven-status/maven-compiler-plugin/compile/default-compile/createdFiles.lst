@@ -1,0 +1,3 @@
+com\boutique\avis\AvisServiceApplication.class
+com\boutique\avis\controller\AvisController.class
+com\boutique\avis\client\ProduitClient.class

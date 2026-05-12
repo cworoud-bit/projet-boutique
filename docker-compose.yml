@@ -1,0 +1,98 @@
+services:
+  postgres-produits:
+    image: postgres:15
+    container_name: postgres-produits
+    environment:
+      POSTGRES_DB: produits_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - boutique-network
+
+  postgres-avis:
+    image: postgres:15
+    container_name: postgres-avis
+    environment:
+      POSTGRES_DB: avis_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    networks:
+      - boutique-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - boutique-network
+
+  eureka-server:
+    build:
+      context: ./eureka-server
+      dockerfile: Dockerfile
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - boutique-network
+
+  produits-service:
+    build:
+      context: ./produits-service
+      dockerfile: Dockerfile
+    container_name: produits-service
+    ports:
+      - "8091:8091"
+    depends_on:
+      - postgres-produits
+      - redis
+      - eureka-server
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-produits:5432/produits_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATA_REDIS_HOST: redis
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - boutique-network
+
+  avis-service:
+    build:
+      context: ./avis-service
+      dockerfile: Dockerfile
+    container_name: avis-service
+    ports:
+      - "8092:8092"
+    depends_on:
+      - postgres-avis
+      - eureka-server
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-avis:5432/avis_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - boutique-network
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8090:8090"
+    depends_on:
+      - eureka-server
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - boutique-network
+
+networks:
+  boutique-network:
+    driver: bridge
